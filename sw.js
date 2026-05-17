@@ -1,4 +1,4 @@
-const CACHE_NAME = "dandandan-bible-v3";
+const CACHE_NAME = "dandandan-bible-v5";
 const ASSETS = ["./", "./index.html", "./styles.css", "./videos.js", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {

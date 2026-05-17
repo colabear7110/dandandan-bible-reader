@@ -1,6 +1,11 @@
 const DEFAULT_PLAYLIST_ID = "PLhp7wkPuMcoQHX7KhDqK2fK4MtXpkfTiQ";
 const STORAGE_PREFIX = "dandandan-v3";
 const PROGRAM_YEAR = 2026;
+const GROUPED_RANGES = [
+  { id: "old-testament-review", label: "구약 정리", start: "9-7", end: "9-13" },
+  { id: "new-testament-prep", label: "신약 준비", start: "9-14", end: "9-20" },
+  { id: "final-review", label: "종합 복습", start: "12-18", end: "12-31" },
+];
 
 const monthReadings = {
   1: ["창 1-3", "창 4-7", "창 8-12", "창 13-15", "창 16-18", "창 19-21", "창 22-24", "창 25-27", "창 28-31", "창 32-35", "창 36-39", "창 40-42", "창 43-45", "창 46-48", "창 49-출 1", "출 2-4", "출 5-7", "출 8-11", "출 12-14", "출 15-17", "출 18-20", "출 21-23", "출 24-26", "출 27-29", "출 30-32", "출 33-35", "출 36-38", "출 39-레 1", "레 2-4", "레 5-7", "레 8-10"],
@@ -28,9 +33,46 @@ const readings = Object.entries(monthReadings).flatMap(([month, ranges]) =>
       date,
       title: `${Number(month)}월 ${dayIndex + 1}일`,
       range: label,
+      completionId: getCompletionId(date),
     };
   }),
 );
+
+function dateKey(month, day) {
+  return `${month}-${day}`;
+}
+
+function getDateKey(date) {
+  return dateKey(date.getMonth() + 1, date.getDate());
+}
+
+function dateKeyToDayOfYear(key) {
+  const [month, day] = key.split("-").map(Number);
+  const date = new Date(PROGRAM_YEAR, month - 1, day);
+
+  return Math.floor((date - new Date(PROGRAM_YEAR, 0, 1)) / 86400000) + 1;
+}
+
+function getCompletionId(date) {
+  const dayOfYear = Math.floor((date - new Date(PROGRAM_YEAR, 0, 1)) / 86400000) + 1;
+  const group = GROUPED_RANGES.find(
+    (range) => dayOfYear >= dateKeyToDayOfYear(range.start) && dayOfYear <= dateKeyToDayOfYear(range.end),
+  );
+
+  return group ? rangeKey(group.id) : getDateKey(date);
+}
+
+function rangeKey(id) {
+  return `group:${id}`;
+}
+
+function getGroupForReading(reading) {
+  return GROUPED_RANGES.find((range) => reading.completionId === rangeKey(range.id));
+}
+
+function getCompletionUnits() {
+  return new Set(readings.map((reading) => reading.completionId));
+}
 
 function getDefaultIndex() {
   const dateParam = new URLSearchParams(window.location.search).get("date");
@@ -75,6 +117,7 @@ const playlistList = document.querySelector("#playlistList");
 const progressText = document.querySelector("#progressText");
 const progressCount = document.querySelector("#progressCount");
 const progressFill = document.querySelector("#progressFill");
+const completeBeforeToday = document.querySelector("#completeBeforeToday");
 const searchInput = document.querySelector("#searchInput");
 const settingsDialog = document.querySelector("#settingsDialog");
 const settingsToggle = document.querySelector("#settingsToggle");
@@ -102,6 +145,10 @@ function saveState() {
   localStorage.setItem(`${STORAGE_PREFIX}-completed`, JSON.stringify([...state.completed]));
 }
 
+function isCompleted(reading) {
+  return state.completed.has(reading.completionId);
+}
+
 function getEmbedUrl() {
   const videoId = getCurrentVideoId();
   if (videoId) {
@@ -113,14 +160,7 @@ function getEmbedUrl() {
     return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
   }
 
-  const params = new URLSearchParams({
-    list: state.playlistId,
-    index: String(state.currentIndex),
-    rel: "0",
-    origin: window.location.origin,
-  });
-
-  return `https://www.youtube.com/embed/videoseries?${params.toString()}`;
+  return "";
 }
 
 function getYoutubeUrl() {
@@ -144,7 +184,7 @@ function getYoutubeUrl() {
 
 function getCurrentVideoId() {
   const reading = readings[state.currentIndex];
-  const key = `${reading.date.getMonth() + 1}-${reading.date.getDate()}`;
+  const key = getDateKey(reading.date);
 
   return window.VIDEO_BY_DATE?.[key] || "";
 }
@@ -155,8 +195,18 @@ function setDay(index) {
   render();
 }
 
+function scrollToPlayer() {
+  document.querySelector(".player-panel")?.scrollIntoView({
+    block: "start",
+    behavior: "smooth",
+  });
+}
+
 function toggleCompleted(day) {
-  const key = String(day);
+  const reading = readings.find((entry) => entry.day === day);
+  if (!reading) return;
+
+  const key = reading.completionId;
   if (state.completed.has(key)) {
     state.completed.delete(key);
   } else {
@@ -166,16 +216,34 @@ function toggleCompleted(day) {
   render();
 }
 
+function completeUntilToday() {
+  const todayIndex = getDefaultIndex();
+  const currentYear = new Date().getFullYear();
+  const lastIndex = currentYear === PROGRAM_YEAR ? todayIndex : state.currentIndex;
+
+  readings.slice(0, lastIndex).forEach((reading) => {
+    state.completed.add(reading.completionId);
+  });
+
+  saveState();
+  render();
+}
+
 function renderProgress() {
-  const completedCount = state.completed.size;
-  const percent = Math.round((completedCount / readings.length) * 100);
+  const units = getCompletionUnits();
+  const completedCount = [...units].filter((unit) => state.completed.has(unit)).length;
+  const percent = Math.round((completedCount / units.size) * 100);
   progressText.textContent = `${percent}%`;
   progressCount.textContent = `${completedCount}개 완료`;
   progressFill.style.width = `${percent}%`;
 }
 
 function renderList() {
-  const filtered = readings.filter((reading) => {
+  const visibleReadings = readings.filter((reading, index) => {
+    const previous = readings[index - 1];
+    return !previous || previous.completionId !== reading.completionId;
+  });
+  const filtered = visibleReadings.filter((reading) => {
     const text = `${reading.day} ${reading.title} ${reading.range}`;
     return text.includes(state.filter);
   });
@@ -185,20 +253,25 @@ function renderList() {
   filtered.forEach((reading) => {
     const item = document.createElement("button");
     const originalIndex = readings.findIndex((entry) => entry.day === reading.day);
-    const done = state.completed.has(String(reading.day));
+    const done = isCompleted(reading);
+    const group = getGroupForReading(reading);
+    const groupLabel = group ? getGroupLabel(group) : "";
 
     item.type = "button";
-    item.className = `day-item${done ? " done" : ""}`;
+    item.className = `day-item${done ? " done" : ""}${group ? " grouped" : ""}`;
     item.dataset.index = String(originalIndex);
-    item.setAttribute("aria-current", String(originalIndex === state.currentIndex));
+    item.setAttribute("aria-current", String(isCurrentReading(reading)));
     item.innerHTML = `
       <span class="check" aria-hidden="true">✓</span>
       <span>
-        <strong>${reading.title}</strong>
-        <span>${reading.range}</span>
+        <strong>${groupLabel || reading.title}</strong>
+        <span>${group ? reading.range : reading.range}</span>
       </span>
     `;
-    item.addEventListener("click", () => setDay(originalIndex));
+    item.addEventListener("click", () => {
+      setDay(originalIndex);
+      scrollToPlayer();
+    });
     playlistList.appendChild(item);
   });
 
@@ -212,23 +285,43 @@ function renderList() {
 
 function render() {
   const reading = readings[state.currentIndex];
-  player.src = state.playlistId ? getEmbedUrl() : "";
-  emptyPlayer.style.display = state.playlistId ? "none" : "grid";
+  const group = getGroupForReading(reading);
+  const hasVideo = Boolean(getCurrentVideoId());
+  player.src = state.playlistId && hasVideo ? getEmbedUrl() : "";
+  emptyPlayer.style.display = state.playlistId && hasVideo ? "none" : "grid";
+  emptyPlayer.querySelector("strong").textContent = getEmptyPlayerText(reading, group);
+  connectPlaylist.style.display = state.playlistId ? "none" : "inline-block";
   openYoutube.href = state.playlistId ? getYoutubeUrl() : "#";
-  openYoutube.style.display = state.playlistId ? "inline-block" : "none";
-  todayTitle.textContent = `${reading.title} · ${reading.range}`;
+  openYoutube.style.display = state.playlistId && hasVideo ? "inline-block" : "none";
+  todayTitle.textContent = `${group ? getGroupLabel(group) : reading.title} · ${reading.range}`;
   dayPosition.textContent = `${state.currentIndex + 1} / ${readings.length}`;
   prevDay.disabled = state.currentIndex === 0;
   nextDay.disabled = state.currentIndex === readings.length - 1;
-  completeToday.textContent = state.completed.has(String(reading.day)) ? "완료 취소" : "봤어요";
+  completeToday.textContent = isCompleted(reading) ? "완료 취소" : "봤어요";
   playlistInput.value = state.playlistId;
   renderProgress();
   renderList();
 }
 
+function getGroupLabel(group) {
+  return `${group.start.replace("-", "월 ")}일-${group.end.split("-")[1]}일`;
+}
+
+function getEmptyPlayerText(reading, group) {
+  if (!state.playlistId) return "교회 유튜브 재생목록을 연결해 주세요";
+  if (group) return "이 구간은 별도 영상이 없어요";
+
+  return `${reading.title} 영상은 아직 준비 중이에요`;
+}
+
+function isCurrentReading(reading) {
+  return readings[state.currentIndex]?.completionId === reading.completionId;
+}
+
 prevDay.addEventListener("click", () => setDay(state.currentIndex - 1));
 nextDay.addEventListener("click", () => setDay(state.currentIndex + 1));
 completeToday.addEventListener("click", () => toggleCompleted(readings[state.currentIndex].day));
+completeBeforeToday.addEventListener("click", completeUntilToday);
 
 searchInput.addEventListener("input", (event) => {
   state.filter = event.target.value.trim();

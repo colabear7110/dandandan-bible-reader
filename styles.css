@@ -127,6 +127,18 @@ h2 {
   background: var(--accent-dark);
 }
 
+.secondary-action {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--accent-dark);
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .video-frame {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -270,6 +282,10 @@ menu button,
   color: white;
   background: var(--accent);
   border-color: var(--accent);
+}
+
+.day-item.grouped {
+  background: #fbfaf5;
 }
 
 .day-item strong,
