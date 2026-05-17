@@ -111,6 +111,7 @@ const player = document.querySelector("#youtubePlayer");
 const todayTitle = document.querySelector("#todayTitle");
 const dayPosition = document.querySelector("#dayPosition");
 const prevDay = document.querySelector("#prevDay");
+const todayDay = document.querySelector("#todayDay");
 const nextDay = document.querySelector("#nextDay");
 const completeToday = document.querySelector("#completeToday");
 const playlistList = document.querySelector("#playlistList");
@@ -319,6 +320,12 @@ function isCurrentReading(reading) {
 }
 
 prevDay.addEventListener("click", () => setDay(state.currentIndex - 1));
+todayDay.addEventListener("click", () => {
+  setDay(getDefaultIndex());
+  searchInput.value = "";
+  state.filter = "";
+  scrollToPlayer();
+});
 nextDay.addEventListener("click", () => setDay(state.currentIndex + 1));
 completeToday.addEventListener("click", () => toggleCompleted(readings[state.currentIndex].day));
 completeBeforeToday.addEventListener("click", completeUntilToday);

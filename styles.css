@@ -192,6 +192,8 @@ menu button,
 #dayPosition {
   color: var(--muted);
   font-weight: 700;
+  min-width: 76px;
+  text-align: center;
 }
 
 .list-panel {

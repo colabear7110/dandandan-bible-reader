@@ -10,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=5" />
+    <link rel="stylesheet" href="./styles.css?v=6" />
   </head>
   <body>
     <main class="app-shell">
@@ -50,6 +50,7 @@
 
         <nav class="day-controls" aria-label="영상 이동">
           <button id="prevDay" type="button">이전</button>
+          <button id="todayDay" type="button">오늘</button>
           <span id="dayPosition">1 / 1</span>
           <button id="nextDay" type="button">다음</button>
         </nav>
@@ -96,8 +97,8 @@
       </form>
     </dialog>
 
-    <script src="./videos.js?v=5"></script>
-    <script src="./app.js?v=5"></script>
+    <script src="./videos.js?v=6"></script>
+    <script src="./app.js?v=6"></script>
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistrations().then((registrations) => {
