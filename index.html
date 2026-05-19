@@ -10,13 +10,14 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=11" />
+    <link rel="stylesheet" href="./styles.css?v=12" />
   </head>
   <body>
     <main class="app-shell">
       <section class="player-panel" aria-labelledby="app-title">
         <div class="topbar">
-          <div>
+          <div class="brand-block">
+            <img class="church-logo" src="./church-logo.png" alt="광명제일 신안교회" />
             <p class="kicker">매일 말씀과 함께</p>
             <h1 id="app-title">단.단.단 성경통독</h1>
           </div>
@@ -97,8 +98,8 @@
       </form>
     </dialog>
 
-    <script src="./videos.js?v=11"></script>
-    <script src="./app.js?v=11"></script>
+    <script src="./videos.js?v=12"></script>
+    <script src="./app.js?v=12"></script>
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistrations().then((registrations) => {

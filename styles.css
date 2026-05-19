@@ -90,6 +90,17 @@ h2 {
   font-size: 1.2rem;
 }
 
+.brand-block {
+  min-width: 0;
+}
+
+.church-logo {
+  width: min(156px, 42vw);
+  height: auto;
+  display: block;
+  margin-bottom: 12px;
+}
+
 .icon-button {
   width: 42px;
   height: 42px;
@@ -418,6 +429,11 @@ menu {
   .today-strip {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .church-logo {
+    width: min(138px, 48vw);
+    margin-bottom: 10px;
   }
 
   .primary-action {
