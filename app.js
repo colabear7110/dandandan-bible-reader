@@ -104,6 +104,7 @@ const state = {
   currentIndex: getInitialIndex(),
   playlistId: localStorage.getItem(`${STORAGE_PREFIX}-playlist-id`) || DEFAULT_PLAYLIST_ID,
   completed: new Set(JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}-completed`) || "[]")),
+  collapsedMonths: new Set(JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}-collapsed-months`) || "[]")),
   filter: "",
 };
 
@@ -144,6 +145,7 @@ function saveState() {
   localStorage.setItem(`${STORAGE_PREFIX}-current-index`, String(state.currentIndex));
   localStorage.setItem(`${STORAGE_PREFIX}-playlist-id`, state.playlistId);
   localStorage.setItem(`${STORAGE_PREFIX}-completed`, JSON.stringify([...state.completed]));
+  localStorage.setItem(`${STORAGE_PREFIX}-collapsed-months`, JSON.stringify([...state.collapsedMonths]));
 }
 
 function isCompleted(reading) {
@@ -217,6 +219,27 @@ function toggleCompleted(day) {
   render();
 }
 
+function toggleCompletedById(completionId) {
+  if (state.completed.has(completionId)) {
+    state.completed.delete(completionId);
+  } else {
+    state.completed.add(completionId);
+  }
+  saveState();
+  render();
+}
+
+function toggleMonth(month) {
+  const key = String(month);
+  if (state.collapsedMonths.has(key)) {
+    state.collapsedMonths.delete(key);
+  } else {
+    state.collapsedMonths.add(key);
+  }
+  saveState();
+  renderList();
+}
+
 function completeUntilToday() {
   const todayIndex = getDefaultIndex();
   const currentYear = new Date().getFullYear();
@@ -251,29 +274,42 @@ function renderList() {
 
   playlistList.innerHTML = "";
 
+  const readingsByMonth = new Map();
   filtered.forEach((reading) => {
-    const item = document.createElement("button");
-    const originalIndex = readings.findIndex((entry) => entry.day === reading.day);
-    const done = isCompleted(reading);
-    const group = getGroupForReading(reading);
-    const groupLabel = group ? getGroupLabel(group) : "";
+    const month = reading.date.getMonth() + 1;
+    if (!readingsByMonth.has(month)) readingsByMonth.set(month, []);
+    readingsByMonth.get(month).push(reading);
+  });
 
-    item.type = "button";
-    item.className = `day-item${done ? " done" : ""}${group ? " grouped" : ""}`;
-    item.dataset.index = String(originalIndex);
-    item.setAttribute("aria-current", String(isCurrentReading(reading)));
-    item.innerHTML = `
-      <span class="check" aria-hidden="true">✓</span>
-      <span>
-        <strong>${groupLabel || reading.title}</strong>
-        <span>${group ? reading.range : reading.range}</span>
-      </span>
+  readingsByMonth.forEach((monthReadingsForList, month) => {
+    const section = document.createElement("section");
+    const monthAllReadings = visibleReadings.filter((reading) => reading.date.getMonth() + 1 === month);
+    const monthCompleted = monthAllReadings.filter((reading) => isCompleted(reading)).length;
+    const collapsed = !state.filter && state.collapsedMonths.has(String(month));
+    section.className = "month-section";
+
+    const monthButton = document.createElement("button");
+    monthButton.type = "button";
+    monthButton.className = "month-toggle";
+    monthButton.setAttribute("aria-expanded", String(!collapsed));
+    monthButton.innerHTML = `
+      <span>${month}월</span>
+      <small>${monthCompleted}/${monthAllReadings.length}</small>
+      <span class="month-indicator" aria-hidden="true">${collapsed ? "+" : "-"}</span>
     `;
-    item.addEventListener("click", () => {
-      setDay(originalIndex);
-      scrollToPlayer();
+    monthButton.addEventListener("click", () => toggleMonth(month));
+    section.appendChild(monthButton);
+
+    const monthList = document.createElement("div");
+    monthList.className = "month-list";
+    monthList.hidden = collapsed;
+
+    monthReadingsForList.forEach((reading) => {
+      monthList.appendChild(createDayItem(reading));
     });
-    playlistList.appendChild(item);
+
+    section.appendChild(monthList);
+    playlistList.appendChild(section);
   });
 
   if (!state.filter) {
@@ -282,6 +318,40 @@ function renderList() {
       playlistList.scrollTop = activeItem.offsetTop - playlistList.clientHeight / 2 + activeItem.clientHeight / 2;
     }
   }
+}
+
+function createDayItem(reading) {
+  const item = document.createElement("div");
+  const originalIndex = readings.findIndex((entry) => entry.day === reading.day);
+  const done = isCompleted(reading);
+  const group = getGroupForReading(reading);
+  const groupLabel = group ? getGroupLabel(group) : "";
+
+  item.className = `day-item${done ? " done" : ""}${group ? " grouped" : ""}`;
+  item.dataset.index = String(originalIndex);
+  item.setAttribute("aria-current", String(isCurrentReading(reading)));
+  item.innerHTML = `
+    <button
+      type="button"
+      class="check"
+      role="checkbox"
+      aria-label="${groupLabel || reading.title} 완료"
+      aria-checked="${done}"
+    >✓</button>
+    <button type="button" class="day-open">
+      <strong>${groupLabel || reading.title}</strong>
+      <span>${reading.range}</span>
+    </button>
+  `;
+  const check = item.querySelector(".check");
+  const dayOpen = item.querySelector(".day-open");
+  check.addEventListener("click", () => toggleCompletedById(reading.completionId));
+  dayOpen.addEventListener("click", () => {
+    setDay(originalIndex);
+    scrollToPlayer();
+  });
+
+  return item;
 }
 
 function render() {
