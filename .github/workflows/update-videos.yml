@@ -2,15 +2,12 @@ name: Update YouTube Videos
 
 on:
   schedule:
-    # 07:01, 07:16, 07:31 KST every day.
-    - cron: "1,16,31 22 * * *"
-    # 08:01 KST fallback in case YouTube updates the playlist late.
-    - cron: "1 23 * * *"
+    # 07:05, 07:35 KST every day.
+    - cron: "5,35 22 * * *"
+    # 08:00, 08:30 KST every day.
+    - cron: "0,30 23 * * *"
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  
 permissions:
   contents: write
 
@@ -25,7 +22,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Update videos.js from YouTube RSS
         run: node scripts/update-videos.mjs
