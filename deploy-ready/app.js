@@ -313,16 +313,6 @@ function renderList() {
   });
 
   if (!state.filter) {
-    const activeMonth = readings[state.currentIndex].date.getMonth() + 1;
-    if (state.collapsedMonths.has(String(activeMonth))) {
-      state.collapsedMonths.delete(String(activeMonth));
-      saveState();
-      renderList();
-      return;
-    }
-  }
-
-  if (!state.filter) {
     const activeItem = playlistList.querySelector('[aria-current="true"]');
     if (activeItem) {
       playlistList.scrollTop = activeItem.offsetTop - playlistList.clientHeight / 2 + activeItem.clientHeight / 2;
