@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 const PLAYLIST_ID = "PLhp7wkPuMcoQHX7KhDqK2fK4MtXpkfTiQ";
 const FEED_URL = `https://www.youtube.com/feeds/videos.xml?playlist_id=${PLAYLIST_ID}`;
 const PLAYLIST_URL = `https://www.youtube.com/playlist?list=${PLAYLIST_ID}&hl=ko`;
+const CHANNEL_VIDEOS_URL = "https://www.youtube.com/@shinanchurch/videos?hl=ko";
 const OUTPUT_FILE = new URL("../videos.js", import.meta.url);
 const REQUEST_HEADERS = {
   "accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -135,22 +136,35 @@ async function fetchFeedEntries() {
   return parseFeedEntries(await response.text());
 }
 
-async function fetchPlaylistEntries() {
-  const response = await fetch(PLAYLIST_URL, {
+async function fetchPageEntries(url, label) {
+  const response = await fetch(url, {
     headers: REQUEST_HEADERS,
   });
 
   if (!response.ok) {
-    throw new Error(`YouTube playlist 요청 실패: ${response.status} ${response.statusText}`);
+    console.log(`${label} unavailable: ${response.status} ${response.statusText}`);
+    return [];
   }
 
   const html = await response.text();
   const initialData = extractInitialData(html);
   if (!initialData) {
-    throw new Error("YouTube 재생목록 페이지에서 ytInitialData를 찾지 못했습니다.");
+    console.log(`${label} ytInitialData not found.`);
+    return [];
   }
 
   return collectPlaylistEntries(initialData);
+}
+
+function mergeEntries(...entryLists) {
+  const merged = new Map();
+
+  entryLists.flat().forEach((entry) => {
+    if (!entry.videoId || !entry.title) return;
+    merged.set(entry.videoId, entry);
+  });
+
+  return [...merged.values()];
 }
 
 function dateKeyFromTitle(title) {
@@ -177,11 +191,10 @@ function sortVideoMap(videoMap) {
 
 const existingSource = await readFile(OUTPUT_FILE, "utf8");
 const videoMap = parseExistingMap(existingSource);
-let entries = await fetchFeedEntries();
-
-if (entries.length === 0) {
-  entries = await fetchPlaylistEntries();
-}
+const feedEntries = await fetchFeedEntries();
+const playlistEntries = await fetchPageEntries(PLAYLIST_URL, "YouTube playlist");
+const channelEntries = await fetchPageEntries(CHANNEL_VIDEOS_URL, "YouTube channel videos");
+const entries = mergeEntries(feedEntries, playlistEntries, channelEntries);
 
 let added = 0;
 let changed = 0;
@@ -207,6 +220,9 @@ if (nextSource !== existingSource) {
 }
 
 console.log(`Fetched entries: ${entries.length}`);
+console.log(`Feed entries: ${feedEntries.length}`);
+console.log(`Playlist entries: ${playlistEntries.length}`);
+console.log(`Channel entries: ${channelEntries.length}`);
 console.log(`Mapped videos: ${Object.keys(sorted).length}`);
 console.log(`Added: ${added}`);
 console.log(`Changed: ${changed}`);
