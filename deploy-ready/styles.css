@@ -252,6 +252,51 @@ menu button,
   padding-right: 2px;
 }
 
+.month-section {
+  display: grid;
+  gap: 8px;
+}
+
+.month-toggle {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f2f6f3;
+  color: var(--ink);
+  padding: 11px 13px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.month-toggle small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.month-indicator {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--accent-dark);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.month-list {
+  display: grid;
+  gap: 8px;
+}
+
 .day-item {
   width: 100%;
   text-align: left;
@@ -262,7 +307,6 @@ menu button,
   display: grid;
   grid-template-columns: 28px 1fr;
   gap: 10px;
-  cursor: pointer;
 }
 
 .day-item[aria-current="true"] {
@@ -278,6 +322,15 @@ menu button,
   border-radius: 999px;
   border: 1px solid var(--line);
   color: transparent;
+  background: var(--panel);
+  cursor: pointer;
+  user-select: none;
+}
+
+.check:focus-visible,
+.day-open:focus-visible {
+  outline: 3px solid rgba(31, 111, 91, 0.24);
+  outline-offset: 2px;
 }
 
 .day-item.done .check {
@@ -290,12 +343,22 @@ menu button,
   background: #fbfaf5;
 }
 
-.day-item strong,
-.day-item span {
+.day-open {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.day-open strong,
+.day-open span {
   display: block;
 }
 
-.day-item span {
+.day-open span {
   margin-top: 3px;
   color: var(--muted);
   font-size: 0.88rem;
