@@ -414,7 +414,7 @@ function updateInstallButton() {
   }
 
   installApp.hidden = false;
-  installApp.textContent = deferredInstallPrompt ? "홈 화면에 추가" : "홈 화면 추가 안내";
+  installApp.textContent = "홈 화면 추가 (안드로이드)";
 }
 
 function renderList() {
