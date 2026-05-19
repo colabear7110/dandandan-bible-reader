@@ -39,6 +39,13 @@ input {
   align-items: stretch;
 }
 
+.app-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+}
+
 .player-panel,
 .list-panel {
   background: rgba(255, 255, 255, 0.9);
@@ -95,10 +102,9 @@ h2 {
 }
 
 .church-logo {
-  width: min(156px, 42vw);
+  width: min(109px, 36vw);
   height: auto;
   display: block;
-  margin-bottom: 12px;
 }
 
 .icon-button {
@@ -429,11 +435,6 @@ menu {
   .today-strip {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .church-logo {
-    width: min(138px, 48vw);
-    margin-bottom: 10px;
   }
 
   .primary-action {
