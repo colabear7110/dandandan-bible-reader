@@ -1,0 +1,359 @@
+:root {
+  color-scheme: light;
+  --ink: #17211f;
+  --muted: #5f6966;
+  --line: #d8dedb;
+  --paper: #f7f8f5;
+  --panel: #ffffff;
+  --accent: #1f6f5b;
+  --accent-dark: #155141;
+  --gold: #c28b2c;
+  --soft: #e7f0eb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f7f8f5 0%, #eef3f0 55%, #f4efe7 100%);
+  color: var(--ink);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1180px, calc(100vw - 32px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 28px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.player-panel,
+.list-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 18px 55px rgba(28, 41, 36, 0.09);
+}
+
+.player-panel {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.topbar,
+.today-strip,
+.progress-row,
+.day-controls,
+.dialog-header,
+menu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.kicker,
+.label {
+  margin: 0 0 6px;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+h1,
+h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  line-height: 1;
+}
+
+h2 {
+  font-size: 1.2rem;
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.today-strip {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--soft);
+}
+
+.today-strip strong {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.primary-action {
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  padding: 11px 16px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.primary-action:hover {
+  background: var(--accent-dark);
+}
+
+.secondary-action {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--accent-dark);
+  padding: 10px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.video-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #101817;
+  position: relative;
+}
+
+.video-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.empty-player {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  padding: 22px;
+  text-align: center;
+  background: linear-gradient(135deg, #14211d 0%, #26372f 60%, #59482f 100%);
+  color: white;
+}
+
+.empty-player strong {
+  font-size: clamp(1.2rem, 3.2vw, 2rem);
+}
+
+.day-controls button,
+menu button,
+.youtube-link {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.youtube-link {
+  align-self: flex-end;
+  color: var(--accent-dark);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+#dayPosition {
+  color: var(--muted);
+  font-weight: 700;
+  min-width: 76px;
+  text-align: center;
+}
+
+.list-panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.progress-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfcfa;
+}
+
+.progress-row strong {
+  font-size: 1.6rem;
+}
+
+.progress-row span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.progress-track {
+  height: 8px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: #e4e8e5;
+  overflow: hidden;
+}
+
+#progressFill {
+  width: 0%;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.search-row input,
+.settings-form input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 13px;
+  color: var(--ink);
+  background: white;
+}
+
+.playlist-list {
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.day-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 13px;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.day-item[aria-current="true"] {
+  border-color: var(--accent);
+  background: #edf6f2;
+}
+
+.check {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: transparent;
+}
+
+.day-item.done .check {
+  color: white;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.day-item.grouped {
+  background: #fbfaf5;
+}
+
+.day-item strong,
+.day-item span {
+  display: block;
+}
+
+.day-item span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+dialog {
+  width: min(520px, calc(100vw - 28px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0;
+  color: var(--ink);
+}
+
+dialog::backdrop {
+  background: rgba(10, 15, 14, 0.38);
+}
+
+.settings-form {
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.settings-form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.settings-form p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+menu {
+  padding: 0;
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    width: min(100vw - 20px, 560px);
+    grid-template-columns: 1fr;
+    padding: 10px 0;
+  }
+
+  .player-panel,
+  .list-panel {
+    padding: 14px;
+  }
+
+  .today-strip {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .primary-action {
+    width: 100%;
+  }
+}
