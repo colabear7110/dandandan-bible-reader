@@ -201,6 +201,7 @@ const progressText = document.querySelector("#progressText");
 const progressCount = document.querySelector("#progressCount");
 const progressFill = document.querySelector("#progressFill");
 const completeBeforeToday = document.querySelector("#completeBeforeToday");
+const installApp = document.querySelector("#installApp");
 const searchInput = document.querySelector("#searchInput");
 const settingsDialog = document.querySelector("#settingsDialog");
 const settingsToggle = document.querySelector("#settingsToggle");
@@ -390,6 +391,32 @@ function renderProgress() {
   progressFill.style.width = `${percent}%`;
 }
 
+let deferredInstallPrompt = null;
+
+function isStandaloneDisplay() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function getInstallHelpMessage() {
+  if (window.location.protocol === "file:") {
+    return "설치 버튼은 배포된 https 주소에서 Android Chrome으로 열었을 때 작동해요.";
+  }
+
+  return "Android Chrome 메뉴에서 '홈 화면에 추가' 또는 '앱 설치'를 선택해 주세요. 설치창이 준비되면 이 버튼으로 바로 띄울 수 있어요.";
+}
+
+function updateInstallButton() {
+  if (!installApp) return;
+
+  if (isStandaloneDisplay()) {
+    installApp.hidden = true;
+    return;
+  }
+
+  installApp.hidden = false;
+  installApp.textContent = deferredInstallPrompt ? "홈 화면에 추가" : "홈 화면 추가 안내";
+}
+
 function renderList() {
   const visibleReadings = readings.filter((reading, index) => {
     const previous = readings[index - 1];
@@ -524,6 +551,18 @@ todayDay.addEventListener("click", () => {
 nextDay.addEventListener("click", () => setDay(state.currentIndex + 1));
 completeToday.addEventListener("click", () => toggleCompleted(readings[state.currentIndex].day));
 completeBeforeToday.addEventListener("click", completeUntilToday);
+installApp.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) {
+    window.alert(getInstallHelpMessage());
+    return;
+  }
+
+  const promptEvent = deferredInstallPrompt;
+  deferredInstallPrompt = null;
+  promptEvent.prompt();
+  await promptEvent.userChoice.catch(() => null);
+  updateInstallButton();
+});
 
 searchInput.addEventListener("input", (event) => {
   state.filter = event.target.value.trim();
@@ -548,4 +587,16 @@ saveSettings.addEventListener("click", () => {
   settingsDialog.close();
 });
 
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  updateInstallButton();
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  updateInstallButton();
+});
+
+updateInstallButton();
 render();
