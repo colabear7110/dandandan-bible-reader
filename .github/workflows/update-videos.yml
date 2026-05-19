@@ -2,8 +2,10 @@ name: Update YouTube Videos
 
 on:
   schedule:
-    # 07:01 KST every day.
-    - cron: "1 22 * * *"
+    # 07:01, 07:16, 07:31 KST every day.
+    - cron: "1,16,31 22 * * *"
+    # 08:01 KST fallback in case YouTube updates the playlist late.
+    - cron: "1 23 * * *"
   workflow_dispatch:
 
 env:
