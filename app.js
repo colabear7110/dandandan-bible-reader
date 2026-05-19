@@ -6,6 +6,76 @@ const GROUPED_RANGES = [
   { id: "new-testament-prep", label: "신약 준비", start: "9-14", end: "9-20" },
   { id: "final-review", label: "종합 복습", start: "12-18", end: "12-31" },
 ];
+const BOOK_ALIASES = {
+  창세기: "창",
+  출애굽기: "출",
+  레위기: "레",
+  민수기: "민",
+  신명기: "신",
+  여호수아: "수",
+  사사기: "삿",
+  룻기: "룻",
+  사무엘상: "삼상",
+  사무엘하: "삼하",
+  열왕기상: "왕상",
+  열왕기하: "왕하",
+  역대상: "대상",
+  역대하: "대하",
+  에스라: "스",
+  느헤미야: "느",
+  에스더: "에",
+  욥기: "욥",
+  시편: "시",
+  잠언: "잠",
+  전도서: "전",
+  아가: "아",
+  이사야: "사",
+  예레미야: "렘",
+  예레미야애가: "애",
+  에스겔: "겔",
+  다니엘: "단",
+  호세아: "호",
+  요엘: "욜",
+  아모스: "암",
+  오바댜: "옵",
+  요나: "욘",
+  미가: "미",
+  나훔: "나",
+  하박국: "합",
+  스바냐: "습",
+  학개: "학",
+  스가랴: "슥",
+  말라기: "말",
+  마태복음: "마",
+  마가복음: "막",
+  누가복음: "눅",
+  요한복음: "요",
+  사도행전: "행",
+  로마서: "롬",
+  고린도전서: "고전",
+  고린도후서: "고후",
+  갈라디아서: "갈",
+  에베소서: "엡",
+  빌립보서: "빌",
+  골로새서: "골",
+  데살로니가전서: "살전",
+  데살로니가후서: "살후",
+  디모데전서: "딤전",
+  디모데후서: "딤후",
+  디도서: "딛",
+  빌레몬서: "몬",
+  히브리서: "히",
+  야고보서: "약",
+  베드로전서: "벧전",
+  베드로후서: "벧후",
+  요한1서: "요일",
+  요한2서: "요이",
+  요한3서: "요삼",
+  유다서: "유",
+  요한계시록: "계",
+};
+const BOOK_ENTRIES = Object.entries(BOOK_ALIASES).sort(([, firstAlias], [, secondAlias]) => secondAlias.length - firstAlias.length);
+const BOOK_NAME_ENTRIES = Object.entries(BOOK_ALIASES).sort(([firstBook], [secondBook]) => secondBook.length - firstBook.length);
 
 const monthReadings = {
   1: ["창 1-3", "창 4-7", "창 8-12", "창 13-15", "창 16-18", "창 19-21", "창 22-24", "창 25-27", "창 28-31", "창 32-35", "창 36-39", "창 40-42", "창 43-45", "창 46-48", "창 49-출 1", "출 2-4", "출 5-7", "출 8-11", "출 12-14", "출 15-17", "출 18-20", "출 21-23", "출 24-26", "출 27-29", "출 30-32", "출 33-35", "출 36-38", "출 39-레 1", "레 2-4", "레 5-7", "레 8-10"],
@@ -100,11 +170,22 @@ function getInitialIndex() {
   return Number(localStorage.getItem(`${STORAGE_PREFIX}-current-index`) || getDefaultIndex());
 }
 
+function getInitialCollapsedMonths(initialIndex) {
+  const layoutInitialized = localStorage.getItem(`${STORAGE_PREFIX}-month-layout-initialized`);
+  const saved = localStorage.getItem(`${STORAGE_PREFIX}-collapsed-months`);
+  if (layoutInitialized && saved) return JSON.parse(saved);
+
+  const activeMonth = readings[initialIndex].date.getMonth() + 1;
+
+  return Object.keys(monthReadings).filter((month) => Number(month) !== activeMonth);
+}
+
+const initialIndex = getInitialIndex();
 const state = {
-  currentIndex: getInitialIndex(),
+  currentIndex: initialIndex,
   playlistId: localStorage.getItem(`${STORAGE_PREFIX}-playlist-id`) || DEFAULT_PLAYLIST_ID,
   completed: new Set(JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}-completed`) || "[]")),
-  collapsedMonths: new Set(JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}-collapsed-months`) || "[]")),
+  collapsedMonths: new Set(getInitialCollapsedMonths(initialIndex)),
   filter: "",
 };
 
@@ -146,6 +227,7 @@ function saveState() {
   localStorage.setItem(`${STORAGE_PREFIX}-playlist-id`, state.playlistId);
   localStorage.setItem(`${STORAGE_PREFIX}-completed`, JSON.stringify([...state.completed]));
   localStorage.setItem(`${STORAGE_PREFIX}-collapsed-months`, JSON.stringify([...state.collapsedMonths]));
+  localStorage.setItem(`${STORAGE_PREFIX}-month-layout-initialized`, "true");
 }
 
 function isCompleted(reading) {
@@ -240,6 +322,52 @@ function toggleMonth(month) {
   renderList();
 }
 
+function normalizeSearchText(value) {
+  const compact = value.replace(/\s+/g, "");
+  const alias = BOOK_ALIASES[compact];
+  const entry = BOOK_NAME_ENTRIES.find(([book]) => compact.startsWith(book));
+  if (entry) return compact.replace(entry[0], entry[1]);
+
+  return alias || compact;
+}
+
+function getSearchQuery(value) {
+  const compact = value.replace(/\s+/g, "");
+  const bookEntry = BOOK_NAME_ENTRIES.find(([book]) => compact.startsWith(book));
+  if (!bookEntry) return { compact, normalized: normalizeSearchText(value), bookAlias: "" };
+
+  return {
+    compact,
+    normalized: compact.replace(bookEntry[0], bookEntry[1]),
+    bookAlias: bookEntry[1],
+  };
+}
+
+function getReadingBook(reading) {
+  const rangeWithoutSpaces = reading.range.replace(/\s+/g, "");
+  const entry = BOOK_ENTRIES.find(([, alias]) => rangeWithoutSpaces.startsWith(alias));
+
+  return entry ? { fullName: entry[0], alias: entry[1] } : null;
+}
+
+function matchesSearch(reading) {
+  if (!state.filter) return true;
+
+  const query = getSearchQuery(state.filter);
+  const rangeWithoutSpaces = reading.range.replace(/\s+/g, "");
+  const baseText = `${reading.day} ${reading.title} ${reading.range} ${rangeWithoutSpaces}`;
+  const book = getReadingBook(reading);
+  if (baseText.includes(state.filter)) return true;
+  if (!query.bookAlias && baseText.includes(query.normalized)) return true;
+  if (!book) return false;
+
+  if (query.bookAlias) {
+    return book.alias === query.bookAlias && (!query.normalized || rangeWithoutSpaces.includes(query.normalized));
+  }
+
+  return book.fullName.includes(state.filter) || book.fullName.includes(query.normalized) || book.alias === query.normalized;
+}
+
 function completeUntilToday() {
   const todayIndex = getDefaultIndex();
   const currentYear = new Date().getFullYear();
@@ -267,10 +395,7 @@ function renderList() {
     const previous = readings[index - 1];
     return !previous || previous.completionId !== reading.completionId;
   });
-  const filtered = visibleReadings.filter((reading) => {
-    const text = `${reading.day} ${reading.title} ${reading.range}`;
-    return text.includes(state.filter);
-  });
+  const filtered = visibleReadings.filter((reading) => matchesSearch(reading));
 
   playlistList.innerHTML = "";
 
