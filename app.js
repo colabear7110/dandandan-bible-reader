@@ -229,6 +229,7 @@ const progressText = document.querySelector("#progressText");
 const progressCount = document.querySelector("#progressCount");
 const progressFill = document.querySelector("#progressFill");
 const completeBeforeToday = document.querySelector("#completeBeforeToday");
+const refreshApp = document.querySelector("#refreshApp");
 const installApp = document.querySelector("#installApp");
 const searchInput = document.querySelector("#searchInput");
 const settingsDialog = document.querySelector("#settingsDialog");
@@ -580,6 +581,9 @@ todayDay.addEventListener("click", () => {
 nextDay.addEventListener("click", () => setDay(state.currentIndex + 1));
 completeToday.addEventListener("click", () => toggleCompleted(readings[state.currentIndex].day));
 completeBeforeToday.addEventListener("click", completeUntilToday);
+refreshApp.addEventListener("click", () => {
+  window.location.reload();
+});
 installApp.addEventListener("click", async () => {
   if (!deferredInstallPrompt) {
     window.alert(getInstallHelpMessage());

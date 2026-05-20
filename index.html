@@ -7,10 +7,10 @@
     <meta name="theme-color" content="#1f6f5b" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="단.단.단" />
-    <link rel="manifest" href="./manifest.webmanifest?v=16" />
+    <link rel="manifest" href="./manifest.webmanifest?v=17" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=16" />
+    <link rel="stylesheet" href="./styles.css?v=17" />
   </head>
   <body>
     <main class="app-shell">
@@ -67,6 +67,7 @@
             <div id="progressFill"></div>
           </div>
           <button id="completeBeforeToday" class="secondary-action" type="button">오늘 이전 통독 완료</button>
+          <button id="refreshApp" class="secondary-action" type="button">새로고침</button>
           <button id="installApp" class="secondary-action install-action" type="button" hidden>홈 화면 추가 (안드로이드)</button>
         </div>
 
@@ -117,7 +118,7 @@
           .catch(() => {
             window.VIDEO_BY_DATE = window.VIDEO_BY_DATE || {};
           })
-          .finally(() => loadScript("./app.js?v=16"));
+          .finally(() => loadScript("./app.js?v=17"));
       })();
     </script>
     <script>
