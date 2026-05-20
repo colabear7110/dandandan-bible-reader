@@ -7,10 +7,10 @@
     <meta name="theme-color" content="#1f6f5b" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="단.단.단" />
-    <link rel="manifest" href="./manifest.webmanifest?v=15" />
+    <link rel="manifest" href="./manifest.webmanifest?v=16" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=15" />
+    <link rel="stylesheet" href="./styles.css?v=16" />
   </head>
   <body>
     <main class="app-shell">
@@ -101,8 +101,25 @@
       </form>
     </dialog>
 
-    <script src="./videos.js?v=15"></script>
-    <script src="./app.js?v=15"></script>
+    <script>
+      (() => {
+        const cacheStamp = new Date().toISOString().slice(0, 16).replace(/\D/g, "");
+        const loadScript = (src) =>
+          new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+          });
+
+        loadScript(`./videos.js?fresh=${cacheStamp}`)
+          .catch(() => {
+            window.VIDEO_BY_DATE = window.VIDEO_BY_DATE || {};
+          })
+          .finally(() => loadScript("./app.js?v=16"));
+      })();
+    </script>
     <script>
       if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
         window.addEventListener("load", () => {

@@ -144,6 +144,29 @@ function getCompletionUnits() {
   return new Set(readings.map((reading) => reading.completionId));
 }
 
+function getKoreaTodayParts() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(new Date());
+
+  return Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, Number(part.value)]));
+}
+
+function getKoreaTodayDate() {
+  const today = getKoreaTodayParts();
+
+  return new Date(today.year, today.month - 1, today.day);
+}
+
+function getKoreaTodayStorageKey() {
+  const today = getKoreaTodayParts();
+
+  return `${today.year}-${String(today.month).padStart(2, "0")}-${String(today.day).padStart(2, "0")}`;
+}
+
 function getDefaultIndex() {
   const dateParam = new URLSearchParams(window.location.search).get("date");
   const dateMatch = dateParam?.match(/^(\d{1,2})-(\d{1,2})$/);
@@ -157,7 +180,7 @@ function getDefaultIndex() {
     if (index >= 0) return index;
   }
 
-  const today = new Date();
+  const today = getKoreaTodayDate();
   if (today.getFullYear() !== PROGRAM_YEAR) return 0;
 
   return Math.floor((today - new Date(PROGRAM_YEAR, 0, 1)) / 86400000);
@@ -167,7 +190,12 @@ function getInitialIndex() {
   const dateParam = new URLSearchParams(window.location.search).get("date");
   if (dateParam) return getDefaultIndex();
 
-  return Number(localStorage.getItem(`${STORAGE_PREFIX}-current-index`) || getDefaultIndex());
+  const savedIndex = localStorage.getItem(`${STORAGE_PREFIX}-current-index`);
+  const savedOpenDate = localStorage.getItem(`${STORAGE_PREFIX}-last-open-date`);
+  const todayKey = getKoreaTodayStorageKey();
+  if (savedIndex && savedOpenDate === todayKey) return Number(savedIndex);
+
+  return getDefaultIndex();
 }
 
 function getInitialCollapsedMonths(initialIndex) {
@@ -229,6 +257,7 @@ function saveState() {
   localStorage.setItem(`${STORAGE_PREFIX}-completed`, JSON.stringify([...state.completed]));
   localStorage.setItem(`${STORAGE_PREFIX}-collapsed-months`, JSON.stringify([...state.collapsedMonths]));
   localStorage.setItem(`${STORAGE_PREFIX}-month-layout-initialized`, "true");
+  localStorage.setItem(`${STORAGE_PREFIX}-last-open-date`, getKoreaTodayStorageKey());
 }
 
 function isCompleted(reading) {
