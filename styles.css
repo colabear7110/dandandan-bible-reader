@@ -199,7 +199,8 @@ h2 {
 
 .day-controls button,
 menu button,
-.youtube-link {
+.youtube-link,
+.subtle-action {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -207,8 +208,18 @@ menu button,
   cursor: pointer;
 }
 
+.video-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.subtle-action {
+  color: var(--ink);
+}
+
 .youtube-link {
-  align-self: flex-end;
   color: var(--accent-dark);
   font-weight: 800;
   text-decoration: none;
