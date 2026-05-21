@@ -161,14 +161,41 @@ function getKoreaTodayDate() {
   return new Date(today.year, today.month - 1, today.day);
 }
 
+function getKoreaNow() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(
+    parts.filter((part) => part.type !== "literal").map((part) => [part.type, Number(part.value)]),
+  );
+
+  return new Date(values.year, values.month - 1, values.day, values.hour, values.minute, values.second);
+}
+
 function getKoreaTodayStorageKey() {
   const today = getKoreaTodayParts();
 
   return `${today.year}-${String(today.month).padStart(2, "0")}-${String(today.day).padStart(2, "0")}`;
 }
 
-function isFutureReading(reading) {
-  return reading.date > getKoreaTodayDate();
+function isBeforeReleaseTime(reading) {
+  const releaseTime = new Date(
+    reading.date.getFullYear(),
+    reading.date.getMonth(),
+    reading.date.getDate(),
+    7,
+    0,
+    0,
+  );
+
+  return getKoreaNow() < releaseTime;
 }
 
 function getDefaultIndex() {
@@ -273,7 +300,7 @@ function isCompleted(reading) {
 
 function getEmbedUrl() {
   const reading = readings[state.currentIndex];
-  if (isFutureReading(reading)) return "";
+  if (isBeforeReleaseTime(reading)) return "";
 
   const videoId = getCurrentVideoId();
   if (videoId) {
@@ -290,7 +317,7 @@ function getEmbedUrl() {
 
 function getYoutubeUrl() {
   const reading = readings[state.currentIndex];
-  if (isFutureReading(reading)) return "#";
+  if (isBeforeReleaseTime(reading)) return "#";
 
   const videoId = getCurrentVideoId();
   if (videoId) {
@@ -551,7 +578,7 @@ function createDayItem(reading) {
 function render() {
   const reading = readings[state.currentIndex];
   const group = getGroupForReading(reading);
-  const hasVideo = !isFutureReading(reading) && Boolean(getCurrentVideoId());
+  const hasVideo = !isBeforeReleaseTime(reading) && Boolean(getCurrentVideoId());
   player.src = state.playlistId && hasVideo ? getEmbedUrl() : "";
   emptyPlayer.style.display = state.playlistId && hasVideo ? "none" : "grid";
   emptyPlayer.querySelector("strong").textContent = getEmptyPlayerText(reading, group);
@@ -574,7 +601,7 @@ function getGroupLabel(group) {
 
 function getEmptyPlayerText(reading, group) {
   if (!state.playlistId) return "교회 유튜브 재생목록을 연결해 주세요";
-  if (isFutureReading(reading)) return `${reading.title} 영상은 아직 준비 중이에요`;
+  if (isBeforeReleaseTime(reading)) return `${reading.title} 영상은 오전 7시에 열려요`;
   if (group) return "이 구간은 별도 영상이 없어요";
 
   return `${reading.title} 영상은 아직 준비 중이에요`;
