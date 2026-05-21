@@ -7,10 +7,10 @@
     <meta name="theme-color" content="#1f6f5b" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="단.단.단" />
-    <link rel="manifest" href="./manifest.webmanifest?v=19" />
+    <link rel="manifest" href="./manifest.webmanifest?v=20" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=19" />
+    <link rel="stylesheet" href="./styles.css?v=20" />
   </head>
   <body>
     <main class="app-shell">
@@ -130,7 +130,17 @@
               </span>
               <div>
                 <strong>아이폰</strong>
-                <p>Safari에서 앱 주소를 연 뒤, 공유 버튼을 누르고 <b>홈 화면에 추가</b>를 선택하세요.</p>
+                <p>
+                  Safari에서 앱 주소(dan.shinan.or.kr)를 연 뒤, 공유 버튼
+                  <span class="inline-share-icon" aria-label="공유 버튼">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 3v12"></path>
+                      <path d="M7.5 7.5 12 3l4.5 4.5"></path>
+                      <path d="M5 11v8h14v-8"></path>
+                    </svg>
+                  </span>
+                  을 누르고 <b>홈 화면에 추가</b>를 선택하세요.
+                </p>
               </div>
             </article>
 
@@ -144,7 +154,7 @@
               </span>
               <div>
                 <strong>안드로이드</strong>
-                <p>Chrome에서 앱을 연 뒤, 앱 안의 <b>홈 화면 추가 (안드로이드)</b> 버튼을 누르세요.</p>
+                <p>Chrome에서 앱 주소(dan.shinan.or.kr)로 들어간 후, 앱 안의 <b>홈 화면 추가 (안드로이드)</b> 버튼을 누르세요.</p>
               </div>
             </article>
           </div>
@@ -184,7 +194,7 @@
           .catch(() => {
             window.VIDEO_BY_DATE = window.VIDEO_BY_DATE || {};
           })
-          .finally(() => loadScript("./app.js?v=19"));
+          .finally(() => loadScript("./app.js?v=20"));
       })();
     </script>
     <script>

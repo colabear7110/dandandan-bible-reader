@@ -1,4 +1,4 @@
-const CACHE_NAME = "dandandan-bible-v19";
+const CACHE_NAME = "dandandan-bible-v20";
 const ASSETS = [
   "./",
   "./index.html",
