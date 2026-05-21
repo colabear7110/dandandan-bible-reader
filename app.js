@@ -167,6 +167,10 @@ function getKoreaTodayStorageKey() {
   return `${today.year}-${String(today.month).padStart(2, "0")}-${String(today.day).padStart(2, "0")}`;
 }
 
+function isFutureReading(reading) {
+  return reading.date > getKoreaTodayDate();
+}
+
 function getDefaultIndex() {
   const dateParam = new URLSearchParams(window.location.search).get("date");
   const dateMatch = dateParam?.match(/^(\d{1,2})-(\d{1,2})$/);
@@ -268,6 +272,9 @@ function isCompleted(reading) {
 }
 
 function getEmbedUrl() {
+  const reading = readings[state.currentIndex];
+  if (isFutureReading(reading)) return "";
+
   const videoId = getCurrentVideoId();
   if (videoId) {
     const params = new URLSearchParams({
@@ -282,6 +289,9 @@ function getEmbedUrl() {
 }
 
 function getYoutubeUrl() {
+  const reading = readings[state.currentIndex];
+  if (isFutureReading(reading)) return "#";
+
   const videoId = getCurrentVideoId();
   if (videoId) {
     const params = new URLSearchParams({
@@ -541,7 +551,7 @@ function createDayItem(reading) {
 function render() {
   const reading = readings[state.currentIndex];
   const group = getGroupForReading(reading);
-  const hasVideo = Boolean(getCurrentVideoId());
+  const hasVideo = !isFutureReading(reading) && Boolean(getCurrentVideoId());
   player.src = state.playlistId && hasVideo ? getEmbedUrl() : "";
   emptyPlayer.style.display = state.playlistId && hasVideo ? "none" : "grid";
   emptyPlayer.querySelector("strong").textContent = getEmptyPlayerText(reading, group);
@@ -564,6 +574,7 @@ function getGroupLabel(group) {
 
 function getEmptyPlayerText(reading, group) {
   if (!state.playlistId) return "교회 유튜브 재생목록을 연결해 주세요";
+  if (isFutureReading(reading)) return `${reading.title} 영상은 아직 준비 중이에요`;
   if (group) return "이 구간은 별도 영상이 없어요";
 
   return `${reading.title} 영상은 아직 준비 중이에요`;
