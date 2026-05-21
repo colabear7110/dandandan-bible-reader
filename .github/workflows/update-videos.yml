@@ -2,10 +2,12 @@ name: Update YouTube Videos
 
 on:
   schedule:
-    # 07:05, 07:35 KST every day.
-    - cron: "5,35 22 * * *"
-    # 08:00, 08:30 KST every day.
-    - cron: "0,30 23 * * *"
+    # 07:05-07:55 KST every day. GitHub scheduled runs can be delayed, so retry often.
+    - cron: "5,15,25,35,45,55 22 * * *"
+    # 08:05-08:50 KST every day.
+    - cron: "5,20,35,50 23 * * *"
+    # 09:20 KST final fallback.
+    - cron: "20 0 * * *"
   workflow_dispatch:
 
 permissions:
