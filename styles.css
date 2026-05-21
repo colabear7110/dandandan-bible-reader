@@ -73,6 +73,13 @@ menu {
   gap: 14px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .kicker,
 .label {
   margin: 0 0 6px;
@@ -115,6 +122,7 @@ h2 {
   background: var(--panel);
   color: var(--ink);
   cursor: pointer;
+  font-weight: 900;
 }
 
 .today-strip {
@@ -420,6 +428,82 @@ dialog::backdrop {
   padding: 18px;
   display: grid;
   gap: 16px;
+}
+
+.guide-dialog {
+  padding: 18px;
+  display: grid;
+  gap: 18px;
+}
+
+.guide-section,
+.guide-notice {
+  display: grid;
+  gap: 12px;
+}
+
+.guide-section h3,
+.guide-notice h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.guide-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.guide-item,
+.guide-notice {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.guide-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--accent-dark);
+  display: grid;
+  place-items: center;
+}
+
+.guide-icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.guide-icon svg path:first-child {
+  fill: none;
+}
+
+.notice-icon {
+  background: #fff5df;
+  color: #8a5b11;
+}
+
+.guide-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.guide-item p,
+.guide-notice p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
 }
 
 .settings-form label {

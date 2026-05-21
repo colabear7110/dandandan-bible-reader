@@ -7,10 +7,10 @@
     <meta name="theme-color" content="#1f6f5b" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="단.단.단" />
-    <link rel="manifest" href="./manifest.webmanifest?v=18" />
+    <link rel="manifest" href="./manifest.webmanifest?v=19" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=18" />
+    <link rel="stylesheet" href="./styles.css?v=19" />
   </head>
   <body>
     <main class="app-shell">
@@ -20,9 +20,14 @@
             <p class="kicker">매일 말씀과 함께</p>
             <h1 id="app-title">단.단.단 성경통독</h1>
           </div>
-          <button class="icon-button" id="settingsToggle" type="button" aria-label="설정 열기" title="설정">
-            ⚙
-          </button>
+          <div class="topbar-actions">
+            <button class="icon-button" id="guideToggle" type="button" aria-label="앱 안내 열기" title="앱 안내">
+              i
+            </button>
+            <button class="icon-button" id="settingsToggle" type="button" aria-label="설정 열기" title="설정">
+              ⚙
+            </button>
+          </div>
         </div>
 
         <div class="today-strip">
@@ -104,6 +109,65 @@
       </form>
     </dialog>
 
+    <dialog id="guideDialog">
+      <form method="dialog" class="guide-dialog">
+        <div class="dialog-header">
+          <h2>앱 안내</h2>
+          <button class="icon-button" value="close" aria-label="닫기" title="닫기">×</button>
+        </div>
+
+        <section class="guide-section" aria-labelledby="guide-install-title">
+          <h3 id="guide-install-title">홈 화면에 바로가기 만들기</h3>
+          <div class="guide-grid">
+            <article class="guide-item">
+              <span class="guide-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <rect x="6" y="2.5" width="12" height="19" rx="2.5"></rect>
+                  <path d="M10 18.5h4"></path>
+                  <path d="M12 6v7"></path>
+                  <path d="M9.5 8.5 12 6l2.5 2.5"></path>
+                </svg>
+              </span>
+              <div>
+                <strong>아이폰</strong>
+                <p>Safari에서 앱 주소를 연 뒤, 공유 버튼을 누르고 <b>홈 화면에 추가</b>를 선택하세요.</p>
+              </div>
+            </article>
+
+            <article class="guide-item">
+              <span class="guide-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 3a9 9 0 1 0 9 9h-9z"></path>
+                  <path d="M12 3v9h9"></path>
+                  <path d="M12 12 6.5 20"></path>
+                </svg>
+              </span>
+              <div>
+                <strong>안드로이드</strong>
+                <p>Chrome에서 앱을 연 뒤, 앱 안의 <b>홈 화면 추가 (안드로이드)</b> 버튼을 누르세요.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="guide-notice" aria-labelledby="guide-video-title">
+          <span class="guide-icon notice-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M10 8 16 12l-6 4z"></path>
+              <rect x="3" y="5" width="18" height="14" rx="3"></rect>
+            </svg>
+          </span>
+          <div>
+            <h3 id="guide-video-title">영상 연결 안내</h3>
+            <p>
+              이 앱은 교회 유튜브 영상을 연결해서 보여줍니다. 유튜브에 영상이 올라온 뒤 앱에 반영되기까지
+              시간이 조금 걸릴 수 있어요. 영상이 보이지 않으면 <b>새로고침</b>을 눌러 주세요.
+            </p>
+          </div>
+        </section>
+      </form>
+    </dialog>
+
     <script>
       (() => {
         const cacheStamp = new Date().toISOString().slice(0, 16).replace(/\D/g, "");
@@ -120,7 +184,7 @@
           .catch(() => {
             window.VIDEO_BY_DATE = window.VIDEO_BY_DATE || {};
           })
-          .finally(() => loadScript("./app.js?v=18"));
+          .finally(() => loadScript("./app.js?v=19"));
       })();
     </script>
     <script>

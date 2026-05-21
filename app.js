@@ -234,6 +234,8 @@ const installApp = document.querySelector("#installApp");
 const searchInput = document.querySelector("#searchInput");
 const settingsDialog = document.querySelector("#settingsDialog");
 const settingsToggle = document.querySelector("#settingsToggle");
+const guideDialog = document.querySelector("#guideDialog");
+const guideToggle = document.querySelector("#guideToggle");
 const connectPlaylist = document.querySelector("#connectPlaylist");
 const emptyPlayer = document.querySelector("#emptyPlayer");
 const openYoutube = document.querySelector("#openYoutube");
@@ -604,6 +606,10 @@ searchInput.addEventListener("input", (event) => {
 
 settingsToggle.addEventListener("click", () => {
   settingsDialog.showModal();
+});
+
+guideToggle.addEventListener("click", () => {
+  guideDialog.showModal();
 });
 
 connectPlaylist.addEventListener("click", () => {
