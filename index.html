@@ -7,10 +7,10 @@
     <meta name="theme-color" content="#1f6f5b" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="단.단.단" />
-    <link rel="manifest" href="./manifest.webmanifest?v=24" />
+    <link rel="manifest" href="./manifest.webmanifest?v=26" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css?v=24" />
+    <link rel="stylesheet" href="./styles.css?v=26" />
   </head>
   <body>
     <main class="app-shell">
@@ -24,7 +24,13 @@
             <button class="icon-button" id="guideToggle" type="button" aria-label="앱 안내 열기" title="앱 안내">
               i
             </button>
-            <button class="icon-button" id="settingsToggle" type="button" aria-label="설정 열기" title="설정">
+            <button class="icon-button text-size-button" id="decreaseTextSize" type="button" aria-label="글자 작게" title="글자 작게">
+              -
+            </button>
+            <button class="icon-button text-size-button" id="increaseTextSize" type="button" aria-label="글자 크게" title="글자 크게">
+              +
+            </button>
+            <button class="icon-button settings-hidden" id="settingsToggle" type="button" aria-label="설정 열기" title="설정">
               ⚙
             </button>
           </div>
@@ -206,7 +212,7 @@
           .catch(() => {
             window.VIDEO_BY_DATE = window.VIDEO_BY_DATE || {};
           })
-          .finally(() => loadScript("./app.js?v=24"));
+          .finally(() => loadScript("./app.js?v=26"));
       })();
     </script>
     <script>

@@ -9,6 +9,7 @@
   --accent-dark: #155141;
   --gold: #c28b2c;
   --soft: #e7f0eb;
+  font-size: var(--app-font-size, 16px);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -21,6 +22,7 @@ body {
   min-height: 100vh;
   background: linear-gradient(135deg, #f7f8f5 0%, #eef3f0 55%, #f4efe7 100%);
   color: var(--ink);
+  font-size: var(--app-font-size, 16px);
 }
 
 button,
@@ -123,6 +125,20 @@ h2 {
   color: var(--ink);
   cursor: pointer;
   font-weight: 900;
+}
+
+.text-size-button {
+  font-size: 1.15rem;
+}
+
+.icon-button:disabled {
+  color: var(--muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.settings-hidden {
+  display: none;
 }
 
 .today-strip {
@@ -657,6 +673,23 @@ menu {
   .today-strip {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .text-size-button {
+    font-size: 1.05rem;
   }
 
   .primary-action {

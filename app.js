@@ -271,6 +271,8 @@ const settingsDialog = document.querySelector("#settingsDialog");
 const settingsToggle = document.querySelector("#settingsToggle");
 const guideDialog = document.querySelector("#guideDialog");
 const guideToggle = document.querySelector("#guideToggle");
+const decreaseTextSize = document.querySelector("#decreaseTextSize");
+const increaseTextSize = document.querySelector("#increaseTextSize");
 const connectPlaylist = document.querySelector("#connectPlaylist");
 const emptyPlayer = document.querySelector("#emptyPlayer");
 const openYoutube = document.querySelector("#openYoutube");
@@ -296,6 +298,18 @@ function saveState() {
   localStorage.setItem(`${STORAGE_PREFIX}-collapsed-months`, JSON.stringify([...state.collapsedMonths]));
   localStorage.setItem(`${STORAGE_PREFIX}-month-layout-initialized`, "true");
   localStorage.setItem(`${STORAGE_PREFIX}-last-open-date`, getKoreaTodayStorageKey());
+}
+
+function getTextScale() {
+  return Number(localStorage.getItem(`${STORAGE_PREFIX}-text-scale`) || "0");
+}
+
+function setTextScale(nextScale) {
+  const scale = Math.max(-1, Math.min(3, nextScale));
+  localStorage.setItem(`${STORAGE_PREFIX}-text-scale`, String(scale));
+  document.documentElement.style.setProperty("--app-font-size", `${16 + scale * 2}px`);
+  decreaseTextSize.disabled = scale <= -1;
+  increaseTextSize.disabled = scale >= 3;
 }
 
 function isCompleted(reading) {
@@ -722,6 +736,14 @@ guideToggle.addEventListener("click", () => {
   guideDialog.showModal();
 });
 
+decreaseTextSize.addEventListener("click", () => {
+  setTextScale(getTextScale() - 1);
+});
+
+increaseTextSize.addEventListener("click", () => {
+  setTextScale(getTextScale() + 1);
+});
+
 progressTableToggle.addEventListener("click", () => {
   renderProgressDialog();
   progressDialog.showModal();
@@ -753,4 +775,5 @@ window.addEventListener("appinstalled", () => {
 });
 
 updateInstallButton();
+setTextScale(getTextScale());
 render();
