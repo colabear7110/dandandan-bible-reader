@@ -246,6 +246,7 @@ const state = {
   completed: new Set(JSON.parse(localStorage.getItem(`${STORAGE_PREFIX}-completed`) || "[]")),
   collapsedMonths: new Set(getInitialCollapsedMonths(initialIndex)),
   filter: "",
+  lastBulkCompletion: null,
 };
 
 const player = document.querySelector("#youtubePlayer");
@@ -264,6 +265,7 @@ const progressDialog = document.querySelector("#progressDialog");
 const progressOverview = document.querySelector("#progressOverview");
 const progressCalendar = document.querySelector("#progressCalendar");
 const completeBeforeToday = document.querySelector("#completeBeforeToday");
+const undoCompleteBeforeToday = document.querySelector("#undoCompleteBeforeToday");
 const refreshApp = document.querySelector("#refreshApp");
 const installApp = document.querySelector("#installApp");
 const searchInput = document.querySelector("#searchInput");
@@ -457,16 +459,22 @@ function matchesSearch(reading) {
 }
 
 function completeUntilToday() {
+  const confirmed = window.confirm("오늘 이전 통독을 모두 완료 처리할까요?");
+  if (!confirmed) return;
+
   const todayIndex = getDefaultIndex();
-  const currentYear = new Date().getFullYear();
+  const currentYear = getKoreaTodayDate().getFullYear();
   const lastIndex = currentYear === PROGRAM_YEAR ? todayIndex : state.currentIndex;
+  const previousCompleted = [...state.completed];
 
   readings.slice(0, lastIndex).forEach((reading) => {
     state.completed.add(reading.completionId);
   });
 
+  state.lastBulkCompletion = previousCompleted;
   saveState();
   render();
+  undoCompleteBeforeToday.hidden = false;
 }
 
 function renderProgress() {
@@ -707,6 +715,15 @@ todayDay.addEventListener("click", () => {
 nextDay.addEventListener("click", () => setDay(state.currentIndex + 1));
 completeToday.addEventListener("click", () => toggleCompleted(readings[state.currentIndex].day));
 completeBeforeToday.addEventListener("click", completeUntilToday);
+undoCompleteBeforeToday.addEventListener("click", () => {
+  if (!state.lastBulkCompletion) return;
+
+  state.completed = new Set(state.lastBulkCompletion);
+  state.lastBulkCompletion = null;
+  undoCompleteBeforeToday.hidden = true;
+  saveState();
+  render();
+});
 refreshApp.addEventListener("click", () => {
   window.location.reload();
 });
