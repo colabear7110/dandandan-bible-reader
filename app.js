@@ -259,6 +259,10 @@ const playlistList = document.querySelector("#playlistList");
 const progressText = document.querySelector("#progressText");
 const progressCount = document.querySelector("#progressCount");
 const progressFill = document.querySelector("#progressFill");
+const progressTableToggle = document.querySelector("#progressTableToggle");
+const progressDialog = document.querySelector("#progressDialog");
+const progressOverview = document.querySelector("#progressOverview");
+const progressCalendar = document.querySelector("#progressCalendar");
 const completeBeforeToday = document.querySelector("#completeBeforeToday");
 const refreshApp = document.querySelector("#refreshApp");
 const installApp = document.querySelector("#installApp");
@@ -460,6 +464,25 @@ function renderProgress() {
   progressFill.style.width = `${percent}%`;
 }
 
+function getVisibleReadings() {
+  return readings.filter((reading, index) => {
+    const previous = readings[index - 1];
+    return !previous || previous.completionId !== reading.completionId;
+  });
+}
+
+function getMonthProgress(month, visibleReadings = getVisibleReadings()) {
+  const monthItems = visibleReadings.filter((reading) => reading.date.getMonth() + 1 === month);
+  const completedCount = monthItems.filter((reading) => isCompleted(reading)).length;
+  const percent = monthItems.length ? Math.round((completedCount / monthItems.length) * 100) : 0;
+
+  return {
+    completedCount,
+    totalCount: monthItems.length,
+    percent,
+  };
+}
+
 let deferredInstallPrompt = null;
 
 function isStandaloneDisplay() {
@@ -487,10 +510,7 @@ function updateInstallButton() {
 }
 
 function renderList() {
-  const visibleReadings = readings.filter((reading, index) => {
-    const previous = readings[index - 1];
-    return !previous || previous.completionId !== reading.completionId;
-  });
+  const visibleReadings = getVisibleReadings();
   const filtered = visibleReadings.filter((reading) => matchesSearch(reading));
 
   playlistList.innerHTML = "";
@@ -539,6 +559,57 @@ function renderList() {
       playlistList.scrollTop = activeItem.offsetTop - playlistList.clientHeight / 2 + activeItem.clientHeight / 2;
     }
   }
+}
+
+function renderProgressDialog() {
+  const visibleReadings = getVisibleReadings();
+  progressOverview.innerHTML = "";
+  progressCalendar.innerHTML = "";
+
+  Object.keys(monthReadings).forEach((monthKey) => {
+    const month = Number(monthKey);
+    const monthProgress = getMonthProgress(month, visibleReadings);
+    const summary = document.createElement("article");
+    summary.className = "month-summary";
+    summary.innerHTML = `
+      <div>
+        <strong>${month}월</strong>
+        <span>${monthProgress.completedCount}/${monthProgress.totalCount}개 완료</span>
+      </div>
+      <b>${monthProgress.percent}%</b>
+    `;
+    progressOverview.appendChild(summary);
+
+    const monthReadingsForGrid = visibleReadings.filter((reading) => reading.date.getMonth() + 1 === month);
+    const section = document.createElement("section");
+    section.className = "calendar-month";
+    section.innerHTML = `
+      <h3>${month}월</h3>
+      <div class="calendar-grid"></div>
+    `;
+    const grid = section.querySelector(".calendar-grid");
+
+    monthReadingsForGrid.forEach((reading) => {
+      const originalIndex = readings.findIndex((entry) => entry.day === reading.day);
+      const group = getGroupForReading(reading);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `calendar-day${isCompleted(reading) ? " done" : ""}${isCurrentReading(reading) ? " current" : ""}${group ? " grouped" : ""}`;
+      button.title = `${group ? getGroupLabel(group) : reading.title} · ${reading.range}`;
+      button.innerHTML = `
+        <span>${reading.date.getDate()}</span>
+        <b>${isCompleted(reading) ? "✓" : ""}</b>
+      `;
+      button.addEventListener("click", () => {
+        progressDialog.close();
+        setDay(originalIndex);
+        scrollToPlayer();
+      });
+      grid.appendChild(button);
+    });
+
+    progressCalendar.appendChild(section);
+  });
 }
 
 function createDayItem(reading) {
@@ -593,6 +664,7 @@ function render() {
   playlistInput.value = state.playlistId;
   renderProgress();
   renderList();
+  if (progressDialog.open) renderProgressDialog();
 }
 
 function getGroupLabel(group) {
@@ -648,6 +720,11 @@ settingsToggle.addEventListener("click", () => {
 
 guideToggle.addEventListener("click", () => {
   guideDialog.showModal();
+});
+
+progressTableToggle.addEventListener("click", () => {
+  renderProgressDialog();
+  progressDialog.showModal();
 });
 
 connectPlaylist.addEventListener("click", () => {
