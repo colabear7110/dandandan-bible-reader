@@ -186,5 +186,6 @@ window.VIDEO_BY_DATE = {
   "7-4": "xFqmAjA3Bn4",
   "7-5": "zfYh_qkTm_8",
   "7-6": "KqGBt2A-wjM",
-  "7-7": "kUy_vnpO0J8"
+  "7-7": "kUy_vnpO0J8",
+  "7-8": "bnHAFdJUOfw"
 };
