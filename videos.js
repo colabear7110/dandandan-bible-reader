@@ -201,5 +201,6 @@ window.VIDEO_BY_DATE = {
   "7-19": "_YOXp2_Ju7s",
   "7-20": "Ls8FpUceKyw",
   "7-21": "vIsNA9ndOEA",
-  "7-22": "sI7rkeibhdg"
+  "7-22": "sI7rkeibhdg",
+  "7-23": "UZSMydHqytk"
 };
