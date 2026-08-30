@@ -242,5 +242,5 @@ window.VIDEO_BY_DATE = {
   "8-29": "8jsmyeUslx0",
   "8-30": "99OH1BUHU_0",
   "8-31": "UCwmh-w5UwU",
-  "9-1": "pSEybKhYeW0"
+  "9-1": "K0XvNNWueX8"
 };
