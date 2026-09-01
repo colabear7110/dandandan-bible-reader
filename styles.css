@@ -413,6 +413,23 @@ menu button,
   background: #fbfaf5;
 }
 
+.day-item.inactive {
+  background: #f3f4f2;
+  color: var(--muted);
+}
+
+.inactive-mark {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px dashed #b7bfbb;
+  color: var(--muted);
+  background: #fff;
+  font-weight: 900;
+}
+
 .day-open {
   width: 100%;
   border: 0;
@@ -424,11 +441,15 @@ menu button,
 }
 
 .day-open strong,
-.day-open span {
+.day-open span,
+.day-static,
+.day-static strong,
+.day-static span {
   display: block;
 }
 
-.day-open span {
+.day-open span,
+.day-static span {
   margin-top: 3px;
   color: var(--muted);
   font-size: 0.88rem;
@@ -550,6 +571,13 @@ dialog::backdrop {
 
 .calendar-day.grouped {
   background: #fbfaf5;
+}
+
+.calendar-day.inactive {
+  background: #f0f1ef;
+  color: #9aa39f;
+  border-style: dashed;
+  cursor: default;
 }
 
 .guide-dialog {

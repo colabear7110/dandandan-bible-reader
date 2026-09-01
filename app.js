@@ -120,16 +120,15 @@ function dateKeyToDayOfYear(key) {
   const [month, day] = key.split("-").map(Number);
   const date = new Date(PROGRAM_YEAR, month - 1, day);
 
+  return getDayOfYear(date);
+}
+
+function getDayOfYear(date) {
   return Math.floor((date - new Date(PROGRAM_YEAR, 0, 1)) / 86400000) + 1;
 }
 
 function getCompletionId(date) {
-  const dayOfYear = Math.floor((date - new Date(PROGRAM_YEAR, 0, 1)) / 86400000) + 1;
-  const group = GROUPED_RANGES.find(
-    (range) => dayOfYear >= dateKeyToDayOfYear(range.start) && dayOfYear <= dateKeyToDayOfYear(range.end),
-  );
-
-  return group ? rangeKey(group.id) : getDateKey(date);
+  return getDateKey(date);
 }
 
 function rangeKey(id) {
@@ -137,11 +136,19 @@ function rangeKey(id) {
 }
 
 function getGroupForReading(reading) {
-  return GROUPED_RANGES.find((range) => reading.completionId === rangeKey(range.id));
+  const dayOfYear = getDayOfYear(reading.date);
+
+  return GROUPED_RANGES.find(
+    (range) => dayOfYear >= dateKeyToDayOfYear(range.start) && dayOfYear <= dateKeyToDayOfYear(range.end),
+  );
+}
+
+function isInactiveReading(reading) {
+  return Boolean(getGroupForReading(reading));
 }
 
 function getCompletionUnits() {
-  return new Set(readings.map((reading) => reading.completionId));
+  return new Set(readings.filter((reading) => !isInactiveReading(reading)).map((reading) => reading.completionId));
 }
 
 function getKoreaTodayParts() {
@@ -315,11 +322,14 @@ function setTextScale(nextScale) {
 }
 
 function isCompleted(reading) {
+  if (isInactiveReading(reading)) return false;
+
   return state.completed.has(reading.completionId);
 }
 
 function getEmbedUrl() {
   const reading = readings[state.currentIndex];
+  if (isInactiveReading(reading)) return "";
   if (isBeforeReleaseTime(reading)) return "";
 
   const videoId = getCurrentVideoId();
@@ -337,6 +347,7 @@ function getEmbedUrl() {
 
 function getYoutubeUrl() {
   const reading = readings[state.currentIndex];
+  if (isInactiveReading(reading)) return "#";
   if (isBeforeReleaseTime(reading)) return "#";
 
   const videoId = getCurrentVideoId();
@@ -380,6 +391,7 @@ function scrollToPlayer() {
 function toggleCompleted(day) {
   const reading = readings.find((entry) => entry.day === day);
   if (!reading) return;
+  if (isInactiveReading(reading)) return;
 
   const key = reading.completionId;
   if (state.completed.has(key)) {
@@ -392,6 +404,9 @@ function toggleCompleted(day) {
 }
 
 function toggleCompletedById(completionId) {
+  const reading = readings.find((entry) => entry.completionId === completionId);
+  if (!reading || isInactiveReading(reading)) return;
+
   if (state.completed.has(completionId)) {
     state.completed.delete(completionId);
   } else {
@@ -468,6 +483,8 @@ function completeUntilToday() {
   const previousCompleted = [...state.completed];
 
   readings.slice(0, lastIndex).forEach((reading) => {
+    if (isInactiveReading(reading)) return;
+
     state.completed.add(reading.completionId);
   });
 
@@ -488,13 +505,17 @@ function renderProgress() {
 
 function getVisibleReadings() {
   return readings.filter((reading, index) => {
+    const group = getGroupForReading(reading);
+    const previousGroup = readings[index - 1] ? getGroupForReading(readings[index - 1]) : null;
+    if (group && previousGroup?.id === group.id) return false;
+
     const previous = readings[index - 1];
     return !previous || previous.completionId !== reading.completionId;
   });
 }
 
-function getMonthProgress(month, visibleReadings = getVisibleReadings()) {
-  const monthItems = visibleReadings.filter((reading) => reading.date.getMonth() + 1 === month);
+function getMonthProgress(month) {
+  const monthItems = readings.filter((reading) => reading.date.getMonth() + 1 === month && !isInactiveReading(reading));
   const completedCount = monthItems.filter((reading) => isCompleted(reading)).length;
   const percent = monthItems.length ? Math.round((completedCount / monthItems.length) * 100) : 0;
 
@@ -546,7 +567,7 @@ function renderList() {
 
   readingsByMonth.forEach((monthReadingsForList, month) => {
     const section = document.createElement("section");
-    const monthAllReadings = visibleReadings.filter((reading) => reading.date.getMonth() + 1 === month);
+    const monthAllReadings = readings.filter((reading) => reading.date.getMonth() + 1 === month && !isInactiveReading(reading));
     const monthCompleted = monthAllReadings.filter((reading) => isCompleted(reading)).length;
     const collapsed = !state.filter && state.collapsedMonths.has(String(month));
     section.className = "month-section";
@@ -590,7 +611,7 @@ function renderProgressDialog() {
 
   Object.keys(monthReadings).forEach((monthKey) => {
     const month = Number(monthKey);
-    const monthProgress = getMonthProgress(month, visibleReadings);
+    const monthProgress = getMonthProgress(month);
     const summary = document.createElement("article");
     summary.className = "month-summary";
     summary.innerHTML = `
@@ -602,7 +623,7 @@ function renderProgressDialog() {
     `;
     progressOverview.appendChild(summary);
 
-    const monthReadingsForGrid = visibleReadings.filter((reading) => reading.date.getMonth() + 1 === month);
+    const monthReadingsForGrid = readings.filter((reading) => reading.date.getMonth() + 1 === month);
     const section = document.createElement("section");
     section.className = "calendar-month";
     section.innerHTML = `
@@ -616,12 +637,18 @@ function renderProgressDialog() {
       const group = getGroupForReading(reading);
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `calendar-day${isCompleted(reading) ? " done" : ""}${isCurrentReading(reading) ? " current" : ""}${group ? " grouped" : ""}`;
-      button.title = `${group ? getGroupLabel(group) : reading.title} · ${reading.range}`;
+      button.disabled = Boolean(group);
+      button.className = `calendar-day${isCompleted(reading) ? " done" : ""}${isCurrentReading(reading) ? " current" : ""}${group ? " inactive" : ""}`;
+      button.title = `${group ? `${getGroupLabel(group)} ${group.label}` : reading.title} · ${group ? "별도 통독 영상 없음" : reading.range}`;
       button.innerHTML = `
         <span>${reading.date.getDate()}</span>
         <b>${isCompleted(reading) ? "✓" : ""}</b>
       `;
+      if (group) {
+        grid.appendChild(button);
+        return;
+      }
+
       button.addEventListener("click", () => {
         progressDialog.close();
         setDay(originalIndex);
@@ -641,9 +668,21 @@ function createDayItem(reading) {
   const group = getGroupForReading(reading);
   const groupLabel = group ? getGroupLabel(group) : "";
 
-  item.className = `day-item${done ? " done" : ""}${group ? " grouped" : ""}`;
+  item.className = `day-item${done ? " done" : ""}${group ? " inactive" : ""}`;
   item.dataset.index = String(originalIndex);
   item.setAttribute("aria-current", String(isCurrentReading(reading)));
+  if (group) {
+    item.innerHTML = `
+      <span class="inactive-mark" aria-hidden="true">-</span>
+      <span class="day-static">
+        <strong>${groupLabel} ${group.label}</strong>
+        <span>별도 통독 영상 없음</span>
+      </span>
+    `;
+
+    return item;
+  }
+
   item.innerHTML = `
     <button
       type="button"
@@ -671,7 +710,8 @@ function createDayItem(reading) {
 function render() {
   const reading = readings[state.currentIndex];
   const group = getGroupForReading(reading);
-  const hasVideo = !isBeforeReleaseTime(reading) && Boolean(getCurrentVideoId());
+  const isInactive = isInactiveReading(reading);
+  const hasVideo = !isInactive && !isBeforeReleaseTime(reading) && Boolean(getCurrentVideoId());
   player.src = state.playlistId && hasVideo ? getEmbedUrl() : "";
   emptyPlayer.style.display = state.playlistId && hasVideo ? "none" : "grid";
   emptyPlayer.querySelector("strong").textContent = getEmptyPlayerText(reading, group);
@@ -682,7 +722,8 @@ function render() {
   dayPosition.textContent = `${state.currentIndex + 1} / ${readings.length}`;
   prevDay.disabled = state.currentIndex === 0;
   nextDay.disabled = state.currentIndex === readings.length - 1;
-  completeToday.textContent = isCompleted(reading) ? "완료 취소" : "봤어요";
+  completeToday.disabled = isInactive;
+  completeToday.textContent = isInactive ? "체크 없음" : isCompleted(reading) ? "완료 취소" : "봤어요";
   playlistInput.value = state.playlistId;
   renderProgress();
   renderList();
@@ -695,14 +736,19 @@ function getGroupLabel(group) {
 
 function getEmptyPlayerText(reading, group) {
   if (!state.playlistId) return "교회 유튜브 재생목록을 연결해 주세요";
-  if (isBeforeReleaseTime(reading)) return `${reading.title} 영상은 아직 준비 중이에요`;
   if (group) return "이 구간은 별도 영상이 없어요";
+  if (isBeforeReleaseTime(reading)) return `${reading.title} 영상은 아직 준비 중이에요`;
 
   return `${reading.title} 영상은 아직 준비 중이에요`;
 }
 
 function isCurrentReading(reading) {
-  return readings[state.currentIndex]?.completionId === reading.completionId;
+  const currentReading = readings[state.currentIndex];
+  const currentGroup = getGroupForReading(currentReading);
+  const readingGroup = getGroupForReading(reading);
+  if (currentGroup || readingGroup) return currentGroup?.id === readingGroup?.id;
+
+  return currentReading?.completionId === reading.completionId;
 }
 
 prevDay.addEventListener("click", () => setDay(state.currentIndex - 1));
