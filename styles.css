@@ -418,7 +418,13 @@ menu button,
   color: var(--muted);
 }
 
-.inactive-mark {
+.day-item.special {
+  background: #fffaf0;
+  border-color: #e8cf9a;
+}
+
+.inactive-mark,
+.special-mark {
   width: 24px;
   height: 24px;
   display: grid;
@@ -428,6 +434,13 @@ menu button,
   color: var(--muted);
   background: #fff;
   font-weight: 900;
+}
+
+.special-mark {
+  border-style: solid;
+  border-color: #d69e2e;
+  color: #8a5b11;
+  font-size: 0.72rem;
 }
 
 .day-open {
@@ -578,6 +591,11 @@ dialog::backdrop {
   color: #9aa39f;
   border-style: dashed;
   cursor: default;
+}
+
+.calendar-day.special {
+  background: #fff5df;
+  border-color: #e3bf75;
 }
 
 .guide-dialog {

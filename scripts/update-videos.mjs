@@ -10,6 +10,14 @@ const REQUEST_HEADERS = {
   "user-agent":
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36",
 };
+const TARGET_TITLE_PATTERNS = [
+  "[단.단.단 성경통독]",
+  "구약과 신약을 잇는 징검다리",
+  "침묵의 400년",
+  "신약의 무대",
+  "실패한 율법",
+  "마태복음, 왕의 행차를 맞이하라",
+];
 
 function decodeXml(value) {
   return value
@@ -103,7 +111,7 @@ function collectPlaylistEntries(node, entries = [], seen = new Set()) {
     if (!renderer?.videoId || seen.has(renderer.videoId)) continue;
 
     const title = textFromRuns(renderer.title);
-    if (title.includes("[단.단.단 성경통독]")) {
+    if (TARGET_TITLE_PATTERNS.some((pattern) => title.includes(pattern))) {
       seen.add(renderer.videoId);
       entries.push({
         videoId: renderer.videoId,
@@ -168,7 +176,7 @@ function mergeEntries(...entryLists) {
 }
 
 function dateKeyFromTitle(title) {
-  const match = title.match(/(\d{1,2})월\s*(\d{1,2})일/);
+  const match = title.match(/(\d{1,2})월\s*(\d{1,2})일/) || title.match(/(?:^|[^\d])(\d{1,2})\s*[./]\s*(\d{1,2})(?:[^\d]|$)/);
   if (!match) return "";
 
   const month = Number(match[1]);

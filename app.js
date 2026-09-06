@@ -6,6 +6,24 @@ const GROUPED_RANGES = [
   { id: "new-testament-prep", label: "신약 준비", start: "9-14", end: "9-20" },
   { id: "final-review", label: "종합 복습", start: "12-18", end: "12-31" },
 ];
+const SPECIAL_VIDEOS = {
+  "9-9": {
+    part: "1부",
+    title: "침묵의 400년, 하나님은 무엇을 하셨는가?",
+  },
+  "9-12": {
+    part: "2부",
+    title: "신약의 무대, 그들은 누구인가?",
+  },
+  "9-16": {
+    part: "3부",
+    title: "실패한 율법, 그리고 참된 왕의 도래",
+  },
+  "9-19": {
+    part: "4부",
+    title: "신약 통독 프리뷰 \"마태복음, 왕의 행차를 맞이하라\"",
+  },
+};
 const BOOK_ALIASES = {
   창세기: "창",
   출애굽기: "출",
@@ -144,11 +162,39 @@ function getGroupForReading(reading) {
 }
 
 function isInactiveReading(reading) {
-  return Boolean(getGroupForReading(reading));
+  return Boolean(getGroupForReading(reading)) && !isSpecialVideoReading(reading);
+}
+
+function isSpecialVideoReading(reading) {
+  return Boolean(getSpecialVideo(reading));
+}
+
+function getSpecialVideo(reading) {
+  return SPECIAL_VIDEOS[getDateKey(reading.date)];
+}
+
+function getReadingHeading(reading) {
+  const specialVideo = getSpecialVideo(reading);
+  if (specialVideo) return `${reading.title} 특별영상 ${specialVideo.part}`;
+
+  const group = getGroupForReading(reading);
+  return group ? `${getGroupLabel(group)} ${group.label}` : reading.title;
+}
+
+function getReadingSubtitle(reading) {
+  const specialVideo = getSpecialVideo(reading);
+  if (specialVideo) return specialVideo.title;
+
+  const group = getGroupForReading(reading);
+  return group ? "별도 통독 영상 없음" : reading.range;
 }
 
 function getCompletionUnits() {
-  return new Set(readings.filter((reading) => !isInactiveReading(reading)).map((reading) => reading.completionId));
+  return new Set(
+    readings
+      .filter((reading) => !isInactiveReading(reading) && !isSpecialVideoReading(reading))
+      .map((reading) => reading.completionId),
+  );
 }
 
 function getKoreaTodayParts() {
@@ -322,7 +368,7 @@ function setTextScale(nextScale) {
 }
 
 function isCompleted(reading) {
-  if (isInactiveReading(reading)) return false;
+  if (isInactiveReading(reading) || isSpecialVideoReading(reading)) return false;
 
   return state.completed.has(reading.completionId);
 }
@@ -391,7 +437,7 @@ function scrollToPlayer() {
 function toggleCompleted(day) {
   const reading = readings.find((entry) => entry.day === day);
   if (!reading) return;
-  if (isInactiveReading(reading)) return;
+  if (isInactiveReading(reading) || isSpecialVideoReading(reading)) return;
 
   const key = reading.completionId;
   if (state.completed.has(key)) {
@@ -405,7 +451,7 @@ function toggleCompleted(day) {
 
 function toggleCompletedById(completionId) {
   const reading = readings.find((entry) => entry.completionId === completionId);
-  if (!reading || isInactiveReading(reading)) return;
+  if (!reading || isInactiveReading(reading) || isSpecialVideoReading(reading)) return;
 
   if (state.completed.has(completionId)) {
     state.completed.delete(completionId);
@@ -460,7 +506,9 @@ function matchesSearch(reading) {
 
   const query = getSearchQuery(state.filter);
   const rangeWithoutSpaces = reading.range.replace(/\s+/g, "");
-  const baseText = `${reading.day} ${reading.title} ${reading.range} ${rangeWithoutSpaces}`;
+  const heading = getReadingHeading(reading);
+  const subtitle = getReadingSubtitle(reading);
+  const baseText = `${reading.day} ${reading.title} ${reading.range} ${heading} ${subtitle} ${rangeWithoutSpaces}`;
   const book = getReadingBook(reading);
   if (baseText.includes(state.filter)) return true;
   if (!query.bookAlias && baseText.includes(query.normalized)) return true;
@@ -483,7 +531,7 @@ function completeUntilToday() {
   const previousCompleted = [...state.completed];
 
   readings.slice(0, lastIndex).forEach((reading) => {
-    if (isInactiveReading(reading)) return;
+    if (isInactiveReading(reading) || isSpecialVideoReading(reading)) return;
 
     state.completed.add(reading.completionId);
   });
@@ -504,10 +552,15 @@ function renderProgress() {
 }
 
 function getVisibleReadings() {
+  const shownInactiveGroups = new Set();
+
   return readings.filter((reading, index) => {
-    const group = getGroupForReading(reading);
-    const previousGroup = readings[index - 1] ? getGroupForReading(readings[index - 1]) : null;
-    if (group && previousGroup?.id === group.id) return false;
+    const group = isInactiveReading(reading) ? getGroupForReading(reading) : null;
+    if (group) {
+      if (shownInactiveGroups.has(group.id)) return false;
+      shownInactiveGroups.add(group.id);
+      return true;
+    }
 
     const previous = readings[index - 1];
     return !previous || previous.completionId !== reading.completionId;
@@ -515,7 +568,9 @@ function getVisibleReadings() {
 }
 
 function getMonthProgress(month) {
-  const monthItems = readings.filter((reading) => reading.date.getMonth() + 1 === month && !isInactiveReading(reading));
+  const monthItems = readings.filter(
+    (reading) => reading.date.getMonth() + 1 === month && !isInactiveReading(reading) && !isSpecialVideoReading(reading),
+  );
   const completedCount = monthItems.filter((reading) => isCompleted(reading)).length;
   const percent = monthItems.length ? Math.round((completedCount / monthItems.length) * 100) : 0;
 
@@ -567,7 +622,9 @@ function renderList() {
 
   readingsByMonth.forEach((monthReadingsForList, month) => {
     const section = document.createElement("section");
-    const monthAllReadings = readings.filter((reading) => reading.date.getMonth() + 1 === month && !isInactiveReading(reading));
+    const monthAllReadings = readings.filter(
+      (reading) => reading.date.getMonth() + 1 === month && !isInactiveReading(reading) && !isSpecialVideoReading(reading),
+    );
     const monthCompleted = monthAllReadings.filter((reading) => isCompleted(reading)).length;
     const collapsed = !state.filter && state.collapsedMonths.has(String(month));
     section.className = "month-section";
@@ -635,16 +692,18 @@ function renderProgressDialog() {
     monthReadingsForGrid.forEach((reading) => {
       const originalIndex = readings.findIndex((entry) => entry.day === reading.day);
       const group = getGroupForReading(reading);
+      const specialVideo = getSpecialVideo(reading);
+      const inactive = isInactiveReading(reading);
       const button = document.createElement("button");
       button.type = "button";
-      button.disabled = Boolean(group);
-      button.className = `calendar-day${isCompleted(reading) ? " done" : ""}${isCurrentReading(reading) ? " current" : ""}${group ? " inactive" : ""}`;
-      button.title = `${group ? `${getGroupLabel(group)} ${group.label}` : reading.title} · ${group ? "별도 통독 영상 없음" : reading.range}`;
+      button.disabled = inactive;
+      button.className = `calendar-day${isCompleted(reading) ? " done" : ""}${isCurrentReading(reading) ? " current" : ""}${inactive ? " inactive" : ""}${specialVideo ? " special" : ""}`;
+      button.title = `${getReadingHeading(reading)} · ${getReadingSubtitle(reading)}`;
       button.innerHTML = `
         <span>${reading.date.getDate()}</span>
-        <b>${isCompleted(reading) ? "✓" : ""}</b>
+        <b>${isCompleted(reading) ? "✓" : specialVideo ? "▶" : ""}</b>
       `;
-      if (group) {
+      if (inactive) {
         grid.appendChild(button);
         return;
       }
@@ -665,20 +724,38 @@ function createDayItem(reading) {
   const item = document.createElement("div");
   const originalIndex = readings.findIndex((entry) => entry.day === reading.day);
   const done = isCompleted(reading);
-  const group = getGroupForReading(reading);
-  const groupLabel = group ? getGroupLabel(group) : "";
+  const specialVideo = getSpecialVideo(reading);
+  const inactive = isInactiveReading(reading);
+  const heading = getReadingHeading(reading);
+  const subtitle = getReadingSubtitle(reading);
 
-  item.className = `day-item${done ? " done" : ""}${group ? " inactive" : ""}`;
+  item.className = `day-item${done ? " done" : ""}${inactive ? " inactive" : ""}${specialVideo ? " special" : ""}`;
   item.dataset.index = String(originalIndex);
   item.setAttribute("aria-current", String(isCurrentReading(reading)));
-  if (group) {
+  if (inactive) {
     item.innerHTML = `
       <span class="inactive-mark" aria-hidden="true">-</span>
       <span class="day-static">
-        <strong>${groupLabel} ${group.label}</strong>
-        <span>별도 통독 영상 없음</span>
+        <strong>${heading}</strong>
+        <span>${subtitle}</span>
       </span>
     `;
+
+    return item;
+  }
+
+  if (specialVideo) {
+    item.innerHTML = `
+      <span class="special-mark" aria-hidden="true">▶</span>
+      <button type="button" class="day-open">
+        <strong>${heading}</strong>
+        <span>${subtitle}</span>
+      </button>
+    `;
+    item.querySelector(".day-open").addEventListener("click", () => {
+      setDay(originalIndex);
+      scrollToPlayer();
+    });
 
     return item;
   }
@@ -688,12 +765,12 @@ function createDayItem(reading) {
       type="button"
       class="check"
       role="checkbox"
-      aria-label="${groupLabel || reading.title} 완료"
+      aria-label="${reading.title} 완료"
       aria-checked="${done}"
     >✓</button>
     <button type="button" class="day-open">
-      <strong>${groupLabel || reading.title}</strong>
-      <span>${reading.range}</span>
+      <strong>${heading}</strong>
+      <span>${subtitle}</span>
     </button>
   `;
   const check = item.querySelector(".check");
@@ -711,6 +788,7 @@ function render() {
   const reading = readings[state.currentIndex];
   const group = getGroupForReading(reading);
   const isInactive = isInactiveReading(reading);
+  const specialVideo = getSpecialVideo(reading);
   const hasVideo = !isInactive && !isBeforeReleaseTime(reading) && Boolean(getCurrentVideoId());
   player.src = state.playlistId && hasVideo ? getEmbedUrl() : "";
   emptyPlayer.style.display = state.playlistId && hasVideo ? "none" : "grid";
@@ -718,12 +796,12 @@ function render() {
   connectPlaylist.style.display = state.playlistId ? "none" : "inline-block";
   openYoutube.href = state.playlistId ? getYoutubeUrl() : "#";
   openYoutube.style.display = state.playlistId && hasVideo ? "inline-block" : "none";
-  todayTitle.textContent = `${group ? getGroupLabel(group) : reading.title} · ${reading.range}`;
+  todayTitle.textContent = `${getReadingHeading(reading)} · ${getReadingSubtitle(reading)}`;
   dayPosition.textContent = `${state.currentIndex + 1} / ${readings.length}`;
   prevDay.disabled = state.currentIndex === 0;
   nextDay.disabled = state.currentIndex === readings.length - 1;
-  completeToday.disabled = isInactive;
-  completeToday.textContent = isInactive ? "체크 없음" : isCompleted(reading) ? "완료 취소" : "봤어요";
+  completeToday.disabled = isInactive || Boolean(specialVideo);
+  completeToday.textContent = isInactive ? "체크 없음" : specialVideo ? "특별 영상" : isCompleted(reading) ? "완료 취소" : "봤어요";
   playlistInput.value = state.playlistId;
   renderProgress();
   renderList();
@@ -736,7 +814,7 @@ function getGroupLabel(group) {
 
 function getEmptyPlayerText(reading, group) {
   if (!state.playlistId) return "교회 유튜브 재생목록을 연결해 주세요";
-  if (group) return "이 구간은 별도 영상이 없어요";
+  if (isInactiveReading(reading)) return "이 구간은 별도 영상이 없어요";
   if (isBeforeReleaseTime(reading)) return `${reading.title} 영상은 아직 준비 중이에요`;
 
   return `${reading.title} 영상은 아직 준비 중이에요`;
@@ -744,6 +822,9 @@ function getEmptyPlayerText(reading, group) {
 
 function isCurrentReading(reading) {
   const currentReading = readings[state.currentIndex];
+  if (isSpecialVideoReading(currentReading) || isSpecialVideoReading(reading)) {
+    return currentReading?.completionId === reading.completionId;
+  }
   const currentGroup = getGroupForReading(currentReading);
   const readingGroup = getGroupForReading(reading);
   if (currentGroup || readingGroup) return currentGroup?.id === readingGroup?.id;
