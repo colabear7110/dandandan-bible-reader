@@ -313,5 +313,7 @@ window.VIDEO_BY_DATE = {
   "11-18": "6f4xQBrwcq4",
   "11-19": "D1mQveIDYwc",
   "11-20": "J0DiwiM_fPo",
-  "11-21": "4zGcjr3yOOI"
+  "11-21": "4zGcjr3yOOI",
+  "11-22": "8A3fDzDAzLE",
+  "11-23": "btvgdjpzUgM"
 };
